@@ -96,7 +96,17 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;backgroun
 
 .gal{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;border-radius:12px}
 .gal::-webkit-scrollbar{display:none}
-.gal img{flex:none;width:86%;max-width:100%;aspect-ratio:4/5;object-fit:cover;scroll-snap-align:start;border-radius:12px;background:var(--surface)}
+.gal img{flex:none;width:100%;max-width:100%;aspect-ratio:4/5;object-fit:cover;scroll-snap-align:start;border-radius:12px;background:var(--surface)}
+.galw{position:relative;display:grid;gap:8px}
+.gnav{position:absolute;top:calc(50% - 40px);width:40px;height:40px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:22px;line-height:1;display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.gnav.prev{left:8px}.gnav.next{right:8px}
+.gnav:disabled{opacity:0;pointer-events:none}
+.gcount{position:absolute;right:10px;top:10px;background:var(--surface);color:var(--ink);font-family:var(--f-mono);font-size:11px;padding:3px 8px;border-radius:999px}
+.thumbs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.thumbs::-webkit-scrollbar{display:none}
+.thumbs button{flex:none;border:2px solid transparent;border-radius:8px;padding:0;background:var(--surface);width:56px;height:70px;overflow:hidden}
+.thumbs button[aria-current="true"]{border-color:var(--ink)}
+.thumbs img{width:100%;height:100%;object-fit:cover;display:block}
 .pd h4{margin:0;font-size:20px;line-height:1.2}
 .pd p{margin:6px 0 0;color:var(--muted)}
 .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;display:block}
@@ -300,22 +310,32 @@ function openProduct(ref){
   const colors=[...new Set(cur.vars.map(v=>v[0]))];
   sel={color: colors.length===1?colors[0]:null, size:null, qty:1};
   if (sizesOf(cur).length===1) sel.size=sizesOf(cur)[0];
-  $("#pRef").textContent = "REF " + cur.ref;
+  $("#pRef").textContent = "REF " + cur.ref; galIdx=0;
   renderProduct(); show("#pSheet");
 }
 function curVar(){ return (sel.color&&sel.size&&findVar(cur,sel.color,sel.size)) || (cur.vars.length===1?cur.vars[0]:minVar(cur)); }
+let galIdx=0;
+function galUpdate(){ const g=$("#gal"); if(!g) return; const n=cur.imgs.length; galIdx=Math.max(0,Math.min(n-1,Math.round(g.scrollLeft/Math.max(1,g.clientWidth))));
+  const c=$("#gcount"); if(c) c.textContent=(galIdx+1)+" / "+n;
+  const pv=document.querySelector(".gnav.prev"), nx=document.querySelector(".gnav.next"); if(pv) pv.disabled=galIdx===0; if(nx) nx.disabled=galIdx===n-1;
+  document.querySelectorAll(".thumbs button").forEach((b,i)=>b.setAttribute("aria-current", String(i===galIdx))); }
+function galGo(i,smooth=true){ const g=$("#gal"); if(!g) return; galIdx=Math.max(0,Math.min(cur.imgs.length-1,i));
+  g.scrollTo({left:galIdx*g.clientWidth, behavior: smooth && !matchMedia("(prefers-reduced-motion: reduce)").matches ? "smooth":"auto"}); galUpdate(); }
 function vq(c,s){ const v=cur.vars.find(v=>v[0]===c&&v[1]===s); return v?v[2]:0; }
 function inCart(c,s){ const l=cart.find(l=>l.ref===cur.ref&&l.color===c&&l.size===s); return l?l.qty:0; }
 function renderProduct(){
   const p=cur, colors=[...new Set(p.vars.map(v=>v[0]))], sizes=sizesOf(p);
   $("#pBody").innerHTML = `
-    <div class="gal">${p.imgs.map((s,i)=>`<img src="${s}" alt="${esc(p.name)} foto ${i+1}" ${i?'loading="lazy"':''}>`).join("")}</div>
+    <div class="galw"><div class="gal" id="gal">${p.imgs.map((s,i)=>`<img src="${s}" alt="${esc(p.name)} foto ${i+1}" ${i?'loading="lazy"':''}>`).join("")}</div>
+      ${p.imgs.length>1?`<button type="button" class="gnav prev" data-g="-1" aria-label="Foto anterior">‹</button><button type="button" class="gnav next" data-g="1" aria-label="Próxima foto">›</button><span class="gcount" id="gcount"></span>`:''}
+      ${p.imgs.length>1?`<div class="thumbs">${p.imgs.map((s,i)=>`<button type="button" data-gi="${i}" aria-label="Ver foto ${i+1}"><img src="${s}" alt="" loading="lazy"></button>`).join("")}</div>`:''}</div>
     <div><span class="b ref">${esc(p.brand)} · ${p.gender} · ${esc(p.cat)}</span><h4 id="pTitle">${esc(p.name)}</h4><p>${esc(p.desc)}</p>
     <p class="note">Nos aplicativos: <s>${brl(vm(p,curVar()))}</s> · no WhatsApp: <b>${brl(vp(p,curVar()))}</b></p></div>
     <div ${p.lab&&colors.length===1?'hidden':''}><span class="lbl">${labs(p)[0]}</span><div class="opts">${colors.map(c=>`<button type="button" class="opt" data-c="${esc(c)}" aria-pressed="${sel.color===c}">${p.lab?'':`<span class="sw" style="background:${SW[c]||'var(--line)'}"></span>`}${esc(c)}</button>`).join("")}</div></div>
     <div ${p.lab&&sizes.length===1?'hidden':''}><span class="lbl">${labs(p)[1]}</span><div class="opts">${sizes.map(s=>{ const ok = sel.color ? vq(sel.color,s)>0 : p.vars.some(v=>v[1]===s);
       return `<button type="button" class="opt size" data-s="${s}" aria-pressed="${sel.size===s}" ${ok?'':'disabled'}>${s}</button>`;}).join("")}</div></div>
     <div><span class="lbl">Quantidade</span><div class="qty"><button type="button" data-q="-1" aria-label="Menos">−</button><span>${sel.qty}</span><button type="button" data-q="1" aria-label="Mais">+</button></div></div>`;
+  { const keep=galIdx, g=$("#gal"); g.addEventListener("scroll",()=>{ clearTimeout(g._t); g._t=setTimeout(galUpdate,60); },{passive:true}); requestAnimationFrame(()=>{ g.scrollLeft=keep*g.clientWidth; galUpdate(); }); galIdx=keep; galUpdate(); }
   const avail = (sel.color&&sel.size) ? vq(sel.color,sel.size) - inCart(sel.color,sel.size) : null;
   const s=$("#pStock");
   if (avail===null){ s.textContent = p.lab ? "Escolha "+labs(p)[0].toLowerCase() : "Escolha cor e tamanho"; s.className="stock"; }
@@ -326,6 +346,8 @@ function renderProduct(){
 }
 $("#pBody").addEventListener("click", e=>{
   const t=e.target.closest("button"); if(!t||t.disabled) return;
+  if (t.dataset.g){ galGo(galIdx + +t.dataset.g); return; }
+  if (t.dataset.gi!==undefined){ galGo(+t.dataset.gi); return; }
   if (t.dataset.c!==undefined){ sel.color=t.dataset.c; if(sel.size && vq(sel.color,sel.size)<=0) sel.size=null; sel.qty=1; }
   else if (t.dataset.s!==undefined){ sel.size=t.dataset.s; sel.qty=1; }
   else if (t.dataset.q){ const max = (sel.color&&sel.size) ? Math.max(1, vq(sel.color,sel.size)-inCart(sel.color,sel.size)) : 1; sel.qty = Math.min(max, Math.max(1, sel.qty + +t.dataset.q)); }
@@ -396,7 +418,8 @@ function show(sel){ hide(true); openEl=$(sel); lastFocus=document.activeElement;
 function hide(silent){ if(!openEl) return; openEl.hidden=true; $("#scrim").hidden=true; document.body.style.overflow=""; openEl=null; if(!silent && lastFocus) lastFocus.focus(); }
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>hide());
 $("#scrim").onclick=()=>hide();
-document.addEventListener("keydown",e=>{ if(e.key==="Escape") hide(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") hide();
+  else if(openEl && openEl.id==="pSheet" && (e.key==="ArrowLeft"||e.key==="ArrowRight") && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)){ e.preventDefault(); galGo(galIdx+(e.key==="ArrowRight"?1:-1)); } });
 let tt; function toast(t){ const el=$("#toast"); el.textContent=t; el.hidden=false; clearTimeout(tt); tt=setTimeout(()=>el.hidden=true,1800); }
 
 renderFilters(); renderGrid(); renderBagCount();
