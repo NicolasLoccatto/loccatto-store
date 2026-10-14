@@ -133,6 +133,14 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;backgroun
 .note{font-size:12px;color:var(--muted)}
 .num{font-family:var(--f-mono);user-select:all}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;z-index:60;font-weight:600;font-size:14px}
+.how{scroll-margin-top:80px;border-top:1px solid var(--line);padding-block:28px 32px;display:grid;gap:18px}
+.how h2{margin:0;font-family:var(--f-display);font-weight:700;font-size:28px;text-transform:uppercase;letter-spacing:.01em}
+.how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.how-item{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:6px;align-content:start;min-width:0}
+.how-item h3{margin:0;font-size:16px}
+.how-item p{margin:0;color:var(--muted);font-size:14px}
+.how-item .k{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.introlink{color:var(--accent);font-weight:600}
 footer.ft{border-top:1px solid var(--line);padding-block:18px 28px;color:var(--muted);font-size:13px}
 .adminbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:9px 14px;font-weight:600;font-size:14px}
 #aSheet{width:auto}
@@ -172,6 +180,7 @@ footer.ft{border-top:1px solid var(--line);padding-block:18px 28px;color:var(--m
   <section class="intro">
     <h2>Pronta entrega</h2>
     <p>Preços exclusivos para pedidos pelo WhatsApp, mais baratos que nos aplicativos. Só aparece o que temos em estoque.</p>
+    <p style="margin-top:6px"><a class="introlink" href="#como-funciona">Pagamento, entrega e trocas</a></p>
     <ol class="steps"><li><b>1</b>Escolha cor e tamanho</li><li><b>2</b>Monte a sacola</li><li><b>3</b>Envie o pedido pelo WhatsApp</li></ol>
   </section>
 
@@ -184,6 +193,15 @@ footer.ft{border-top:1px solid var(--line);padding-block:18px 28px;color:var(--m
   </section>
 
   <section class="grid" id="grid" aria-live="polite"></section>
+
+  <section class="how" id="como-funciona" aria-labelledby="howT">
+    <h2 id="howT">Como funciona</h2>
+    <div class="how-grid">
+      <div class="how-item"><span class="k">Pagamento</span><h3>Pix</h3><p>Depois que você envia o pedido, confirmamos a disponibilidade e passamos a chave Pix pelo WhatsApp.</p></div>
+      <div class="how-item"><span class="k">Entrega</span><h3>Do jeito que ficar melhor</h3><p>Entregamos pessoalmente, enviamos por moto (Uber) ou pelos Correios. Se preferir, você pode retirar. Prazo e frete combinados na conversa.</p></div>
+      <div class="how-item"><span class="k">Trocas</span><h3>Sem complicação</h3><p>Se a peça tiver defeito ou alguma marca que não foi informada antes, ou se não servir, é só chamar no WhatsApp que a gente troca.</p></div>
+    </div>
+  </section>
 </main>
 <footer class="ft"><div class="wrap">Loccatto Store · WhatsApp <span class="num">(11) 99281-6168</span> · Frete e entrega combinados na conversa. <span id="upd"></span></div></footer>
 
@@ -330,7 +348,7 @@ function message(){
   cart.forEach(l=>{ const p=PRODUCTS.find(x=>x.ref===l.ref);
     m+=`• ${p.ref} – ${p.name} (${p.brand})\n   ${lv(l,p)} | ${l.qty}x ${brl(lp(l))} = ${brl(lp(l)*l.qty)}\n`; });
   m+=`\n*Total: ${brl(total())}*\n`;
-  m+=`Recebimento: ${deliv}\n`;
+  m+=`Recebimento: ${deliv}\nPagamento: Pix\n`;
   if(name.trim()) m+=`Nome: ${name.trim()}\n`;
   if(obs.trim()) m+=`Obs.: ${obs.trim()}\n`;
   return m;
@@ -349,7 +367,7 @@ function renderBag(){
       <div class="r"><div class="qty"><button type="button" data-i="${i}" data-d="-1" aria-label="Menos">−</button><span>${l.qty}</span><button type="button" data-i="${i}" data-d="1" aria-label="Mais">+</button></div><button type="button" class="rm" data-rm="${i}">Remover</button></div></div>`;
   }).join("") + `
     <div><span class="lbl">Como prefere receber?</span><div class="seg">${["Entrega","Retirada"].map(o=>`<button type="button" class="opt" data-dv="${o}" aria-pressed="${deliv===o}">${o}</button>`).join("")}</div>
-      <p class="note">O frete da entrega a gente combina na conversa.</p></div>
+      <p class="note">Pagamento por Pix. Entrega pessoal, por moto (Uber) ou Correios; o frete a gente combina na conversa.</p></div>
     <label class="field"><span class="lbl" style="margin:0">Seu nome (opcional)</span><input id="cName" autocomplete="name"></label>
     <label class="field"><span class="lbl" style="margin:0">Observação (opcional)</span><textarea id="cObs" rows="2" placeholder="Ex.: bairro para entrega, troca de tamanho…"></textarea></label>`;
   updateWa();
