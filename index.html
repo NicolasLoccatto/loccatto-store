@@ -292,7 +292,7 @@ function save(){ try { localStorage.setItem("lc_cart", JSON.stringify(cart)); } 
 
 function sizesOf(p){ return [...new Set(p.vars.map(v=>v[1]))].sort((a,b)=>SIZE_ORDER.indexOf(a)-SIZE_ORDER.indexOf(b)); }
 /* Black Friday: liga/desliga e % pela planilha (linha REF "PROMO"); % por produto com linhas "PROMO-LCxx" */
-const PROMO_FIXED = {"LC02":119.90,"LC03":99.90,"LC05":49.90,"LC06":59.90,"LC07":39.90,"LC09":49.90,"LC10":39.90,"LC12":49.90,"LC16":49.90,"LC17":49.90,"LC18":49.90,"LC29":49.90};
+const PROMO_FIXED = {"LC02":119.90,"LC03":99.90,"LC05":49.90,"LC06":59.90,"LC07":39.90,"LC09":49.90,"LC10":39.90,"LC12":49.90,"LC17":49.90,"LC18":49.90,"LC29":49.90};
 const PROMO = { on: true, pct: 10, per: {}, fixed: {...PROMO_FIXED} };
 function promoPct(p){ if(!PROMO.on) return 0; const f=PROMO.fixed[p.ref]; if(f!=null){ const b=Math.max(...p.vars.map(v=>vbase(p,v))); return Math.max(0,Math.round((1-f/b)*100)); } return PROMO.per[p.ref] ?? PROMO.pct; }
 function promoPrice(x,pct){ if(!pct) return x; const y=x*(1-pct/100); return Math.round((Math.floor(y+0.1)-0.1)*100)/100; }
